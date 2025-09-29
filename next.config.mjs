@@ -18,12 +18,20 @@ const nextConfig = {
     
     return [
       {
-        source: '/api/:path*',
-        destination: `${backendUrl}/api/:path*`,
+        source: '/api/fetch',
+        destination: `${backendUrl}/api/fetch`,
       },
       {
-        source: '/download-story',
-        destination: `${backendUrl}/download-story`,
+        source: '/api/preview',
+        destination: `${backendUrl}/api/preview`,
+      },
+      {
+        source: '/api/download',
+        destination: `${backendUrl}/api/download`,
+      },
+      {
+        source: '/api/proxy-image',
+        destination: `${backendUrl}/api/proxy-image`,
       },
     ]
   },

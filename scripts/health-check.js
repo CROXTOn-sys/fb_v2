@@ -60,8 +60,47 @@ try {
     console.log('❌ render.yaml may have issues');
   }
 } catch (error) {
-  console.log('❌ render.yaml is missing or invalid');
+  console.log('❌ Error reading render.yaml:', error.message);
 }
+
+// Check next.config.mjs for proper rewrites
+try {
+  const nextConfig = fs.readFileSync(path.join(__dirname, '..', 'next.config.mjs'), 'utf8');
+  if (nextConfig.includes('RENDER_BACKEND_URL') && nextConfig.includes('/api/')) {
+    console.log('✅ next.config.mjs configured for API proxying');
+  } else {
+    console.log('⚠️  next.config.mjs may need API proxy configuration');
+  }
+} catch (error) {
+  console.log('❌ next.config.mjs is missing or invalid:', error.message);
+}
+
+console.log('\n');
+
+// Check API routes for proper configuration
+console.log('🔌 Checking API routes...');
+
+const apiRoutes = [
+  'app/api/download/route.ts',
+  'app/api/fetch/route.ts',
+  'app/api/preview/route.ts',
+  'app/api/proxy-image/route.ts'
+];
+
+apiRoutes.forEach(route => {
+  const routePath = path.join(__dirname, '..', route);
+  if (fs.existsSync(routePath)) {
+    const routeContent = fs.readFileSync(routePath, 'utf8');
+    if (routeContent.includes('dynamic = \'force-dynamic\'') && 
+        (routeContent.includes('RENDER_BACKEND_URL') || routeContent.includes('BACKEND_URL'))) {
+      console.log(`✅ ${route} configured correctly`);
+    } else {
+      console.log(`⚠️  ${route} may need updates for dynamic rendering and backend URL`);
+    }
+  } else {
+    console.log(`❌ ${route} (MISSING)`);
+  }
+});
 
 console.log('\n');
 
@@ -76,6 +115,9 @@ if (allFilesExist) {
 
 console.log('\n📝 Next steps:');
 console.log('1. Run "npm run deploy" for deployment instructions');
-console.log('2. Push to GitHub');
-console.log('3. Deploy backend to Render first');
-console.log('4. Deploy frontend to Vercel');
+console.log('2. Set environment variables:');
+console.log('   - Vercel: RENDER_BACKEND_URL=https://your-render-app.onrender.com');
+console.log('   - Render: PORT=10000');
+console.log('3. Push to GitHub');
+console.log('4. Deploy backend to Render first');
+console.log('5. Deploy frontend to Vercel');

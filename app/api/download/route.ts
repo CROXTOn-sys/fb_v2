@@ -3,34 +3,33 @@ import axios from 'axios';
 
 export async function GET(request: Request) {
   try {
-    const { searchParams } = new URL(request.url);
-    const url = searchParams.get('url');
-    const filename = searchParams.get('filename') || 'facebook-media';
+    const url = new URL(request.url);
+    const fileUrl = url.searchParams.get('url');
+    const filename = url.searchParams.get('filename') || 'facebook-media';
     
-    if (!url) {
+    if (!fileUrl) {
       return NextResponse.json(
         { success: false, error: 'URL parameter is required' },
         { status: 400 }
       );
     }
     
-    console.log('Downloading file:', url);
+    console.log('Downloading file:', fileUrl);
     console.log('Filename:', filename);
     
-    // Proxy the download request to the backend server (streaming)
-    const backendUrl = `http://localhost:5003/api/download?url=${encodeURIComponent(url)}&filename=${encodeURIComponent(filename)}`;
+    // Use environment variable for backend URL, fallback to localhost in development
+    const backendBaseUrl = process.env.RENDER_BACKEND_URL || process.env.BACKEND_URL || 'http://localhost:5003';
+    const backendUrl = `${backendBaseUrl}/api/download?url=${encodeURIComponent(fileUrl)}&filename=${encodeURIComponent(filename)}`;
 
     const response = await axios.get(backendUrl, {
       responseType: 'stream',
       timeout: 60000,
-      // Forward some safe headers if needed in the future
-      // headers: {}
     });
 
     console.log('Download response status:', response.status);
 
     // Resolve headers
-    const contentType = response.headers['content-type'] || (url.includes('.mp4') ? 'video/mp4' : 'application/octet-stream');
+    const contentType = response.headers['content-type'] || (fileUrl.includes('.mp4') ? 'video/mp4' : 'application/octet-stream');
     const contentLength = response.headers['content-length'];
     const disposition = response.headers['content-disposition'] || `attachment; filename="${filename}"`;
 
@@ -62,3 +61,4 @@ export async function GET(request: Request) {
 }
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';

@@ -10,7 +10,8 @@
     "vercel-build": "next build",
     "update-lockfile": "node scripts/update-lockfile.js",
     "deploy": "node scripts/deploy.js",
-    "health-check": "node scripts/health-check.js"
+    "health-check": "node scripts/health-check.js",
+    "test-api": "node scripts/test-api.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

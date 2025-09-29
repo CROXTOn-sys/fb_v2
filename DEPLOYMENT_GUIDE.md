@@ -75,12 +75,20 @@ async rewrites() {
   
   return [
     {
-      source: '/api/:path*',
-      destination: `${backendUrl}/api/:path*`,
+      source: '/api/fetch',
+      destination: `${backendUrl}/api/fetch`,
     },
     {
-      source: '/download-story',
-      destination: `${backendUrl}/download-story`,
+      source: '/api/preview',
+      destination: `${backendUrl}/api/preview`,
+    },
+    {
+      source: '/api/download',
+      destination: `${backendUrl}/api/download`,
+    },
+    {
+      source: '/api/proxy-image',
+      destination: `${backendUrl}/api/proxy-image`,
     },
   ]
 }
@@ -116,6 +124,7 @@ After making changes:
 1. **CORS Errors**: Make sure the RENDER_BACKEND_URL in Vercel matches your Render deployment URL
 2. **API Not Working**: Check that the backend is running and the URL is correct
 3. **Timeout Issues**: Facebook parsing can take time; consider upgrading from free tiers if needed
+4. **ECONNREFUSED Errors**: Ensure environment variables are correctly set and the backend is running
 
 ### Checking Deployments
 
@@ -129,3 +138,5 @@ After making changes:
 2. **Monitoring**: Regularly check both Vercel and Render dashboards for errors
 3. **Performance**: Consider upgrading from free tiers for production use
 4. **Security**: Don't expose sensitive information in logs or responses
+
+For detailed information about environment configuration, see [ENVIRONMENT_CONFIG.md](ENVIRONMENT_CONFIG.md).

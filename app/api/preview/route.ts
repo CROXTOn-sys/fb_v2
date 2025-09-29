@@ -13,8 +13,10 @@ export async function POST(request: Request) {
       );
     }
     
-    // Proxy the request to the backend server
-    const backendUrl = 'http://localhost:5003/api/preview';
+    // Use environment variable for backend URL, fallback to localhost in development
+    const backendBaseUrl = process.env.RENDER_BACKEND_URL || process.env.BACKEND_URL || 'http://localhost:5003';
+    const backendUrl = `${backendBaseUrl}/api/preview`;
+    
     const response = await axios.post(backendUrl, { url }, {
       headers: {
         'Content-Type': 'application/json'
@@ -31,4 +33,5 @@ export async function POST(request: Request) {
   }
 }
 
-export const runtime = 'nodejs'; // Use nodejs runtime to support axios
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';

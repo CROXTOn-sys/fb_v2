@@ -24,8 +24,10 @@ export async function POST(request: Request) {
     console.log('Fetching Facebook content:', url);
     console.log('Desired type:', desiredType);
     
-    // Proxy the request to the backend server
-    const backendUrl = 'http://localhost:5003/api/fetch';
+    // Use environment variable for backend URL, fallback to localhost in development
+    const backendBaseUrl = process.env.RENDER_BACKEND_URL || process.env.BACKEND_URL || 'http://localhost:5003';
+    const backendUrl = `${backendBaseUrl}/api/fetch`;
+    
     const response = await axios.post(backendUrl, { url, desiredType }, {
       headers: {
         'Content-Type': 'application/json'
@@ -41,7 +43,7 @@ export async function POST(request: Request) {
     // If backend is not available, return a helpful error
     if (error.code === 'ECONNREFUSED') {
       return NextResponse.json(
-        { success: false, error: 'Backend server is not running. Please start the backend server on port 5003.' },
+        { success: false, error: 'Backend server is not accessible. Please check if the backend is running.' },
         { status: 503 }
       );
     }
@@ -53,4 +55,5 @@ export async function POST(request: Request) {
   }
 }
 
-export const runtime = 'nodejs'; // Use nodejs runtime to support axios
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';

@@ -2,18 +2,19 @@ import { NextResponse } from 'next/server';
 
 export async function GET(request: Request) {
   try {
-    const { searchParams } = new URL(request.url);
-    const url = searchParams.get('url');
+    const url = new URL(request.url);
+    const imageUrl = url.searchParams.get('url');
     
-    if (!url) {
+    if (!imageUrl) {
       return NextResponse.json(
         { success: false, error: 'URL parameter is required' },
         { status: 400 }
       );
     }
     
-    // Redirect to the backend server for image proxy
-    const backendUrl = `http://localhost:5003/api/proxy-image?url=${encodeURIComponent(url)}`;
+    // Use environment variable for backend URL, fallback to localhost in development
+    const backendBaseUrl = process.env.RENDER_BACKEND_URL || process.env.BACKEND_URL || 'http://localhost:5003';
+    const backendUrl = `${backendBaseUrl}/api/proxy-image?url=${encodeURIComponent(imageUrl)}`;
     
     // Return a redirect response
     return NextResponse.redirect(backendUrl);
@@ -27,3 +28,4 @@ export async function GET(request: Request) {
 }
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
