@@ -34,7 +34,7 @@ A full-stack application for downloading Facebook content including videos, reel
 Before running the application, make sure you have:
 
 - **Node.js** (version 14 or higher)
-- **npm** (comes with Node.js)
+- **pnpm** (package manager)
 - **Git** (for cloning the repository)
 
 ## Installation & Setup
@@ -72,7 +72,7 @@ npm install
 **Frontend Setup:**
 ```bash
 cd ..
-npm install
+pnpm install
 ```
 
 ### 3. Start the Application
@@ -100,7 +100,7 @@ npm start
 
 **Terminal 2 - Frontend Server:**
 ```bash
-npm run dev
+pnpm dev
 ```
 
 ## Usage
@@ -209,6 +209,12 @@ You can set these environment variables:
    - Facebook may have changed their HTML structure
    - Try with different Facebook URLs
    - Check backend logs for detailed error messages
+
+5. **Vercel Deployment Errors**
+   - If you see `ERR_PNPM_OUTDATED_LOCKFILE`, run `pnpm install` to update the lockfile
+   - Remove any conflicting lock files (`package-lock.json` or `yarn.lock`)
+   - Ensure your `pnpm-lock.yaml` is up to date with `package.json`
+   - See [VERCEL_DEPLOYMENT_FIX.md](VERCEL_DEPLOYMENT_FIX.md) for detailed instructions
 
 ### Debug Mode
 

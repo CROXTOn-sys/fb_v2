@@ -50,6 +50,21 @@ git commit -m "Update pnpm lockfile for Vercel deployment"
 git push origin main
 ```
 
+## Vercel Configuration
+
+This project includes a `vercel.json` file that ensures proper deployment settings using the modern Vercel configuration format:
+
+```json
+{
+  "framework": "nextjs",
+  "installCommand": "pnpm install",
+  "buildCommand": "next build",
+  "outputDirectory": ".next"
+}
+```
+
+This format avoids the warning about unused build settings that occurs when using the older `builds` property.
+
 ## Automated Solutions
 
 This project includes scripts to automate the lockfile update process:
@@ -74,24 +89,6 @@ chmod +x ./scripts/update-lockfile.js
 npm run update-lockfile
 ```
 
-## Vercel Configuration
-
-This project includes a `vercel.json` file that ensures proper deployment settings:
-
-```json
-{
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/next",
-      "config": {
-        "includeFiles": ["next.config.mjs"]
-      }
-    }
-  ]
-}
-```
-
 ## Prevention Tips
 
 1. **Use one package manager consistently**: Stick to either npm, yarn, or pnpm
@@ -108,4 +105,4 @@ If you continue to have issues:
 3. Clear pnpm cache: `pnpm store prune`
 4. Reinstall dependencies from scratch
 
-For more information, refer to the [pnpm documentation on lockfiles](https://pnpm.io/pnpm-lock_yaml).
+For more information, refer to the [pnpm documentation on lockfiles](https://pnpm.io/pnpm-lock_yaml) and [Vercel's configuration documentation](https://vercel.com/docs/projects/project-configuration).
