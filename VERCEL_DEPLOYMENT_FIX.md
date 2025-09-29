@@ -19,10 +19,11 @@ Vercel uses pnpm by default when it detects a `pnpm-lock.yaml` file in your proj
 
 ### 1. Remove Conflicting Lock Files
 
-First, remove any conflicting lock files:
+First, remove any conflicting lock files from both frontend and backend:
 ```bash
-# Remove npm lock file if it exists
+# Remove npm lock files if they exist
 rm package-lock.json
+rm backend/package-lock.json
 
 # Remove yarn lock file if it exists
 rm yarn.lock
@@ -33,35 +34,46 @@ rm yarn.lock
 Regenerate the pnpm lockfile to match your current dependencies:
 
 ```bash
-# Remove existing lockfile
-rm pnpm-lock.yaml
-
-# Install dependencies (this will generate a new lockfile)
+# Update dependencies (this will update the lockfile if needed)
 pnpm install
 ```
 
-### 3. Remove vercel.json (if it exists)
+### 3. Minimal Vercel Configuration
 
-Vercel can automatically detect and build Next.js projects without any configuration file. Remove the vercel.json file to prevent any conflicts with Vercel's automatic detection:
+Use a minimal vercel.json configuration that only specifies the framework:
 
-```bash
-# Remove vercel.json if it exists
-rm vercel.json
+```json
+{
+  "framework": "nextjs"
+}
 ```
+
+This approach avoids any warnings about unused build settings while ensuring Vercel properly recognizes and builds your Next.js application.
 
 ### 4. Commit and Deploy
 
-Commit the updated lockfile and deploy again:
+Commit the updated files and deploy again:
 
 ```bash
-git add pnpm-lock.yaml
-git commit -m "Update pnpm lockfile for Vercel deployment"
+git add pnpm-lock.yaml vercel.json
+git commit -m "Fix Vercel deployment issues"
 git push origin main
 ```
 
-## Vercel Automatic Configuration
+## Vercel Configuration
 
-Vercel can automatically detect and build Next.js projects without any configuration file. This approach eliminates any warnings about unused build settings while ensuring Vercel properly recognizes and builds your Next.js application.
+The minimal vercel.json configuration:
+
+```json
+{
+  "framework": "nextjs"
+}
+```
+
+This configuration:
+- Allows Vercel to use its default settings for Next.js projects
+- Prevents warnings about unused build settings
+- Still ensures proper detection and building of your Next.js application
 
 ## Automated Solutions
 

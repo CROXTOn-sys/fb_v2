@@ -34,7 +34,7 @@ A full-stack application for downloading Facebook content including videos, reel
 Before running the application, make sure you have:
 
 - **Node.js** (version 14 or higher)
-- **pnpm** (package manager)
+- **pnpm** (package manager) - Install with `npm install -g pnpm`
 - **Git** (for cloning the repository)
 
 ## Installation & Setup
