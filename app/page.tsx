@@ -8,6 +8,9 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Download, Globe, Link, ChevronDown, Sun, Moon, Clipboard, Play } from "lucide-react"
 import NextLink from "next/link"
 
+// Add API_BASE constant at the top of the file
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || '';
+
 const languages = [
   { code: "en", name: "English", displayName: "English" },
   { code: "es", name: "Spanish", displayName: "Español" },
@@ -363,7 +366,7 @@ export default function FacebookDownloader() {
     
     // Method 1: Try your existing preview API first
     try {
-      const previewRes = await fetch(`/api/preview`, {
+      const previewRes = await fetch(`${API_BASE}/api/preview`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url })
@@ -593,7 +596,7 @@ export default function FacebookDownloader() {
       console.log("Fetching content for:", url.trim())
       
       // Fetch content directly without preview
-      const response = await fetch(`/api/fetch`, {
+      const response = await fetch(`${API_BASE}/api/fetch`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url: url.trim(), desiredType: (activeTab || '').toLowerCase() })
@@ -692,7 +695,7 @@ export default function FacebookDownloader() {
   async function triggerDownload(mediaUrl: string, suggestedName: string) {
     try {
       // Direct download via proxy
-      const proxied = `/api/download?url=${encodeURIComponent(mediaUrl)}&filename=${encodeURIComponent(suggestedName)}`;
+      const proxied = `${API_BASE}/api/download?url=${encodeURIComponent(mediaUrl)}&filename=${encodeURIComponent(suggestedName)}`;
       
       // Create a temporary anchor element for download
       const anchor = document.createElement('a');

@@ -187,6 +187,10 @@ You can set these environment variables:
 
 - `PORT` - Backend server port (default: 5003)
 - `NODE_ENV` - Environment (development/production)
+- `NEXT_PUBLIC_API_URL` - Frontend API base URL (for connecting to backend)
+- `FRONTEND_URL` - Frontend URL (for CORS configuration in backend)
+
+For detailed environment variable configuration, see [ENVIRONMENT_VARIABLES.md](ENVIRONMENT_VARIABLES.md).
 
 ### Customization
 

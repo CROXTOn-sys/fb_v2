@@ -8,8 +8,14 @@ const fs = require('fs');
 const app = express();
 const PORT = process.env.PORT || process.env.BACKEND_PORT || 5003;
 
+// Configure CORS with environment variable for frontend URL
+const corsOptions = {
+  origin: process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : ["https://your-frontend.vercel.app"],
+  methods: ["GET", "POST", "OPTIONS"]
+};
+
 // Middleware
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
