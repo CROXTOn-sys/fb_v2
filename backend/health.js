@@ -1,6 +1,6 @@
 // Simple health check endpoint for Render
-const express = require('express');
-const router = express.Router();
+import { Router } from 'express';
+const router = Router();
 
 router.get('/health', (req, res) => {
   res.status(200).json({
@@ -13,4 +13,4 @@ router.get('/health', (req, res) => {
   });
 });
 
-module.exports = router;
+export default router;

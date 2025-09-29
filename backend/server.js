@@ -1,9 +1,9 @@
-const express = require('express');
-const cors = require('cors');
-const axios = require('axios');
-const cheerio = require('cheerio');
-const path = require('path');
-const fs = require('fs');
+import express from "express";
+import cors from "cors";
+import axios from "axios";
+import cheerio from "cheerio";
+import path from "path";
+import fs from "fs";
 
 const app = express();
 const PORT = process.env.PORT || process.env.BACKEND_PORT || 5003;
@@ -802,7 +802,7 @@ const parser = new FacebookParser();
 // API Routes
 
 // Health check
-const healthRouter = require('./health');
+import healthRouter from './health.js';
 app.use('/', healthRouter);
 
 // Fetch Facebook content
@@ -1340,4 +1340,4 @@ app.listen(PORT, () => {
   console.log(`Health check: http://localhost:${PORT}/health`);
 });
 
-module.exports = app;
+export default app;
