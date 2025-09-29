@@ -40,7 +40,16 @@ rm pnpm-lock.yaml
 pnpm install
 ```
 
-### 3. Commit and Deploy
+### 3. Remove vercel.json (if it exists)
+
+Vercel can automatically detect and build Next.js projects without any configuration file. Remove the vercel.json file to prevent any conflicts with Vercel's automatic detection:
+
+```bash
+# Remove vercel.json if it exists
+rm vercel.json
+```
+
+### 4. Commit and Deploy
 
 Commit the updated lockfile and deploy again:
 
@@ -50,19 +59,9 @@ git commit -m "Update pnpm lockfile for Vercel deployment"
 git push origin main
 ```
 
-## Vercel Configuration
+## Vercel Automatic Configuration
 
-This project includes a `vercel.json` file that ensures proper deployment settings using the modern Vercel configuration format:
-
-```json
-{
-  "framework": "nextjs",
-  "installCommand": "pnpm install",
-  "buildCommand": "next build"
-}
-```
-
-This minimal configuration avoids any warnings about unused build settings while ensuring Vercel properly recognizes and builds your Next.js application.
+Vercel can automatically detect and build Next.js projects without any configuration file. This approach eliminates any warnings about unused build settings while ensuring Vercel properly recognizes and builds your Next.js application.
 
 ## Automated Solutions
 
