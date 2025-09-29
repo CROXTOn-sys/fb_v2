@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Facebook Downloader Test</title>
+</head>
+<body>
+    <h1>Facebook Downloader Integration Test</h1>
+    <button onclick="testBackend()">Test Backend Connection</button>
+    <button onclick="testDownload()">Test Download</button>
+    <div id="result"></div>
+
+    <script>
+        async function testBackend() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Testing backend...';
+            
+            try {
+                const response = await fetch('http://localhost:5003/health');
+                const data = await response.json();
+                resultDiv.innerHTML = `Backend Status: ${JSON.stringify(data)}`;
+            } catch (error) {
+                resultDiv.innerHTML = `Backend Error: ${error.message}`;
+            }
+        }
+        
+        async function testDownload() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Testing download...';
+            
+            try {
+                // Test with a simple video URL that should work
+                const response = await fetch('http://localhost:5003/api/download?url=https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4&filename=test.mp4');
+                
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'test.mp4';
+                    a.click();
+                    resultDiv.innerHTML = 'Download successful!';
+                } else {
+                    const error = await response.json();
+                    resultDiv.innerHTML = `Download failed: ${JSON.stringify(error)}`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `Download Error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
+
