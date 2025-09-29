@@ -10,13 +10,17 @@ const PORT = process.env.PORT || process.env.BACKEND_PORT || 5003;
 
 // Configure CORS for Vercel frontend
 const corsOptions = {
-  origin: ["https://fb-v2-eta.vercel.app"], // Your exact Vercel frontend URL
+  origin: ["https://fb-v2-eta.vercel.app"], // exact Vercel frontend URL
   methods: ["GET", "POST", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"]
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true
 };
 
 // Middleware
 app.use(cors(corsOptions));
+
+// Explicitly handle OPTIONS requests for all routes
+app.options("*", cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
