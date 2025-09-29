@@ -75,7 +75,16 @@ cd ..
 pnpm install
 ```
 
-### 3. Start the Application
+### 3. Deploy to Production
+
+For production deployment, you can deploy the frontend to Vercel and the backend to Render:
+
+1. Follow the [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) for detailed instructions
+2. Deploy the backend to Render first
+3. Get your Render backend URL
+4. Deploy the frontend to Vercel with the backend URL configured
+
+### 4. Start the Application
 
 #### Option A: Using Startup Scripts
 The startup scripts will automatically install dependencies and start both servers:

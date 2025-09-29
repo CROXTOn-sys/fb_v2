@@ -6,7 +6,7 @@ const path = require('path');
 const fs = require('fs');
 
 const app = express();
-const PORT = process.env.PORT || 5003;
+const PORT = process.env.PORT || process.env.BACKEND_PORT || 5003;
 
 // Middleware
 app.use(cors());
@@ -791,9 +791,8 @@ const parser = new FacebookParser();
 // API Routes
 
 // Health check
-app.get('/health', (req, res) => {
-  res.json({ status: 'OK', timestamp: new Date().toISOString() });
-});
+const healthRouter = require('./health');
+app.use('/', healthRouter);
 
 // Fetch Facebook content
 app.post('/api/fetch', async (req, res) => {
