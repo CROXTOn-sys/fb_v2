@@ -13,9 +13,9 @@ export async function POST(request: Request) {
       );
     }
     
-    // Use environment variable for backend URL, fallback to localhost in development
-    const backendBaseUrl = process.env.RENDER_BACKEND_URL || process.env.BACKEND_URL || 'http://localhost:5003';
-    const backendUrl = `${backendBaseUrl}/api/preview`;
+    // ✅ Replace any hardcoded localhost calls with a dynamic BASE_URL
+    const BASE_URL = process.env.BASE_URL || "http://localhost:5003";
+    const backendUrl = `${BASE_URL}/api/preview`;
     
     const response = await axios.post(backendUrl, { url }, {
       headers: {
