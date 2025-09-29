@@ -58,12 +58,11 @@ This project includes a `vercel.json` file that ensures proper deployment settin
 {
   "framework": "nextjs",
   "installCommand": "pnpm install",
-  "buildCommand": "next build",
-  "outputDirectory": ".next"
+  "buildCommand": "next build"
 }
 ```
 
-This format avoids the warning about unused build settings that occurs when using the older `builds` property.
+This minimal configuration avoids any warnings about unused build settings while ensuring Vercel properly recognizes and builds your Next.js application.
 
 ## Automated Solutions
 
