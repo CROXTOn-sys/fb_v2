@@ -7,7 +7,6 @@ import fs from "fs";
 
 const app = express();
 
-const cors = require('cors');
 app.use(cors({
   origin: 'https://fb-v2-eta.vercel.app',
   methods: ['GET','POST','OPTIONS'],
