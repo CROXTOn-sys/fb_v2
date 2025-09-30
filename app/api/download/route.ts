@@ -17,9 +17,9 @@ export async function GET(request: Request) {
     console.log('Downloading file:', fileUrl);
     console.log('Filename:', filename);
     
-    // ✅ Use environment variable for API base URL
-    const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5003";
-    const backendUrl = `${API_URL}/api/download?url=${encodeURIComponent(fileUrl)}&filename=${encodeURIComponent(filename)}`;
+    // ✅ Use only the environment variable for API base URL
+    const API_BASE = process.env.NEXT_PUBLIC_API_URL!;
+    const backendUrl = `${API_BASE}/api/download?url=${encodeURIComponent(fileUrl)}&filename=${encodeURIComponent(filename)}`;
 
     const response = await axios.get(backendUrl, {
       responseType: 'stream',

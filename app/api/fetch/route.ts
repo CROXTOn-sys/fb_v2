@@ -24,9 +24,9 @@ export async function POST(request: Request) {
     console.log('Fetching Facebook content:', url);
     console.log('Desired type:', desiredType);
     
-    // ✅ Use environment variable for API base URL
-    const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5003";
-    const backendUrl = `${API_URL}/api/fetch`;
+    // ✅ Use only the environment variable for API base URL
+    const API_BASE = process.env.NEXT_PUBLIC_API_URL!;
+    const backendUrl = `${API_BASE}/api/fetch`;
     
     const response = await axios.post(backendUrl, { url, desiredType }, {
       headers: {

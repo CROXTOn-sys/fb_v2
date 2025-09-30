@@ -12,9 +12,9 @@ export async function GET(request: Request) {
       );
     }
     
-    // ✅ Use environment variable for API base URL
-    const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5003";
-    const backendUrl = `${API_URL}/api/proxy-image?url=${encodeURIComponent(imageUrl)}`;
+    // ✅ Use only the environment variable for API base URL
+    const API_BASE = process.env.NEXT_PUBLIC_API_URL!;
+    const backendUrl = `${API_BASE}/api/proxy-image?url=${encodeURIComponent(imageUrl)}`;
     
     // Return a redirect response
     return NextResponse.redirect(backendUrl);

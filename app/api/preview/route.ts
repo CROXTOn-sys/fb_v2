@@ -13,9 +13,9 @@ export async function POST(request: Request) {
       );
     }
     
-    // ✅ Use environment variable for API base URL
-    const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5003";
-    const backendUrl = `${API_URL}/api/preview`;
+    // ✅ Use only the environment variable for API base URL
+    const API_BASE = process.env.NEXT_PUBLIC_API_URL!;
+    const backendUrl = `${API_BASE}/api/preview`;
     
     const response = await axios.post(backendUrl, { url }, {
       headers: {
