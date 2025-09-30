@@ -8,9 +8,9 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Download, Globe, Link, ChevronDown, Sun, Moon, Clipboard, Play } from "lucide-react"
 import NextLink from "next/link"
 
-// ✅ Replace any hardcoded localhost calls with a dynamic BASE_URL
-const BASE_URL = process.env.BASE_URL || "http://localhost:5003";
-const API_BASE = BASE_URL;
+// ✅ Use environment variable for API base URL
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5003";
+const API_BASE = API_URL;
 
 const languages = [
   { code: "en", name: "English", displayName: "English" },

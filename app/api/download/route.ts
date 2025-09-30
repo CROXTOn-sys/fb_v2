@@ -17,9 +17,9 @@ export async function GET(request: Request) {
     console.log('Downloading file:', fileUrl);
     console.log('Filename:', filename);
     
-    // ✅ Replace any hardcoded localhost calls with a dynamic BASE_URL
-    const BASE_URL = process.env.BASE_URL || "http://localhost:5003";
-    const backendUrl = `${BASE_URL}/api/download?url=${encodeURIComponent(fileUrl)}&filename=${encodeURIComponent(filename)}`;
+    // ✅ Use environment variable for API base URL
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5003";
+    const backendUrl = `${API_URL}/api/download?url=${encodeURIComponent(fileUrl)}&filename=${encodeURIComponent(filename)}`;
 
     const response = await axios.get(backendUrl, {
       responseType: 'stream',

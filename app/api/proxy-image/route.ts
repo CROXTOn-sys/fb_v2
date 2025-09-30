@@ -12,9 +12,9 @@ export async function GET(request: Request) {
       );
     }
     
-    // Use environment variable for backend URL, fallback to localhost in development
-    const backendBaseUrl = process.env.RENDER_BACKEND_URL || process.env.BACKEND_URL || 'http://localhost:5003';
-    const backendUrl = `${backendBaseUrl}/api/proxy-image?url=${encodeURIComponent(imageUrl)}`;
+    // ✅ Use environment variable for API base URL
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5003";
+    const backendUrl = `${API_URL}/api/proxy-image?url=${encodeURIComponent(imageUrl)}`;
     
     // Return a redirect response
     return NextResponse.redirect(backendUrl);
