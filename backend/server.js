@@ -1268,7 +1268,7 @@ function extractFacebookId(url) {
   return matches ? matches[1] || 'default' : 'default';
 }
 
-const port = process.env.PORT || 5000;
-app.listen(port, () => console.log(`Backend running on port ${port}`));
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Backend running on port ${PORT}`));
 
 export default app;
