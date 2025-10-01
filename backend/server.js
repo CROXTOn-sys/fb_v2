@@ -7,11 +7,18 @@ import fs from "fs";
 
 const app = express();
 
-app.use(cors({
-  origin: 'https://fb-v2-eta.vercel.app',
-  methods: ['GET','POST','OPTIONS'],
-  allowedHeaders: ['Content-Type'],
-}));
+const allowedOrigins = [
+  "https://fb-v2-eta.vercel.app", // your Vercel frontend
+  "http://localhost:3000" // for local testing
+];
+
+app.use(
+  cors({
+    origin: allowedOrigins,
+    methods: ["GET", "POST", "OPTIONS"],
+    credentials: true
+  })
+);
 app.options('*', cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
