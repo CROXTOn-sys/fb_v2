@@ -594,6 +594,7 @@ export default function FacebookDownloader() {
     
     try {
       console.log("Fetching content for:", url.trim())
+      console.log("Using backend URL:", API_BASE)
       
       // Fetch content directly without preview
       const response = await fetch(`${API_BASE}/api/fetch`, {

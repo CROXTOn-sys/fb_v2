@@ -23,6 +23,11 @@ app.options("*", cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Test route
+app.get("/test", (req, res) => {
+  res.send("Backend is reachable!");
+});
+
 // Health check route
 app.get("/", (req, res) => {
   res.send("Backend is running!");
@@ -810,9 +815,37 @@ import healthRouter from './health.js';
 app.use('/', healthRouter);
 
 // Your existing routes stay exactly the same
-app.get("/api/fetch", (req, res) => {
-  // existing fetch logic
-  res.status(200).json({ message: "Fetch endpoint placeholder" });
+app.post("/api/fetch", async (req, res) => {
+  try {
+    const { url, desiredType } = req.body;
+    
+    if (!url) {
+      return res.status(400).json({
+        success: false,
+        error: "URL is required"
+      });
+    }
+    
+    console.log("Fetching Facebook content:", url);
+    console.log("Desired type:", desiredType);
+    
+    // Parse the content using our FacebookParser
+    const result = await parser.parseContent(url, desiredType);
+    
+    console.log("Parse result:", JSON.stringify(result, null, 2));
+    
+    if (result.success) {
+      return res.status(200).json(result);
+    } else {
+      return res.status(400).json(result);
+    }
+  } catch (error) {
+    console.error("Fetch error:", error);
+    return res.status(500).json({
+      success: false,
+      error: error.message || "Failed to fetch content"
+    });
+  }
 });
 
 // Download media file
