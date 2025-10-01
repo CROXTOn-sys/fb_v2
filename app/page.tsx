@@ -8,8 +8,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Download, Globe, Link, ChevronDown, Sun, Moon, Clipboard, Play } from "lucide-react"
 import NextLink from "next/link"
 
-// ✅ Use only the environment variable for API base URL
-const API_BASE = process.env.NEXT_PUBLIC_API_URL!;
+// ✅ Use only the environment variable for API base URL and remove trailing slash
+const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") || "";
 
 const languages = [
   { code: "en", name: "English", displayName: "English" },

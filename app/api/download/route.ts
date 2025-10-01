@@ -17,8 +17,8 @@ export async function GET(request: Request) {
     console.log('Downloading file:', fileUrl);
     console.log('Filename:', filename);
     
-    // ✅ Use only the environment variable for API base URL
-    const API_BASE = process.env.NEXT_PUBLIC_API_URL!;
+    // ✅ Use only the environment variable for API base URL and remove trailing slash
+    const API_BASE = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/$/, "");
     const backendUrl = `${API_BASE}/api/download?url=${encodeURIComponent(fileUrl)}&filename=${encodeURIComponent(filename)}`;
 
     const response = await axios.get(backendUrl, {

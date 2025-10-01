@@ -12,8 +12,8 @@ export async function GET(request: Request) {
       );
     }
     
-    // ✅ Use only the environment variable for API base URL
-    const API_BASE = process.env.NEXT_PUBLIC_API_URL!;
+    // ✅ Use only the environment variable for API base URL and remove trailing slash
+    const API_BASE = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/$/, "");
     const backendUrl = `${API_BASE}/api/proxy-image?url=${encodeURIComponent(imageUrl)}`;
     
     // Return a redirect response

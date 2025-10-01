@@ -24,8 +24,8 @@ export async function POST(request: Request) {
     console.log('Fetching Facebook content:', url);
     console.log('Desired type:', desiredType);
     
-    // ✅ Use only the environment variable for API base URL
-    const API_BASE = process.env.NEXT_PUBLIC_API_URL!;
+    // ✅ Use only the environment variable for API base URL and remove trailing slash
+    const API_BASE = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/$/, "");
     const backendUrl = `${API_BASE}/api/fetch`;
     
     const response = await axios.post(backendUrl, { url, desiredType }, {
