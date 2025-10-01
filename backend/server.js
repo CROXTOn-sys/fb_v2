@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import axios from "axios";
-import cheerio from "cheerio";
+import * as cheerio from "cheerio";
 import path from "path";
 import fs from "fs";
 
@@ -23,16 +23,16 @@ app.options("*", cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Optional: health check route
+// Health check route
 app.get("/", (req, res) => {
-  res.send("Backend is working!");
+  res.send("Backend is running!");
 });
 
 // Serve static files
-app.use('/downloads', express.static(path.join(__dirname, 'downloads')));
+app.use('/downloads', express.static(path.join(process.cwd(), 'downloads')));
 
 // Create downloads directory if it doesn't exist
-const downloadsDir = path.join(__dirname, 'downloads');
+const downloadsDir = path.join(process.cwd(), 'downloads');
 if (!fs.existsSync(downloadsDir)) {
   fs.mkdirSync(downloadsDir, { recursive: true });
 }
