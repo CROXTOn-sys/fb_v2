@@ -7,26 +7,25 @@ import fs from "fs";
 
 const app = express();
 
-const allowedOrigins = [
-  "https://fb-v2-eta.vercel.app", // your Vercel frontend
-  "http://localhost:3000" // for local testing
-];
-
+// ✅ CORS setup
 app.use(
   cors({
-    origin: allowedOrigins,
+    origin: ["https://fb-v2-eta.vercel.app"], // your frontend
     methods: ["GET", "POST", "OPTIONS"],
-    credentials: true
+    credentials: true,
   })
 );
-app.options('*', cors());
+
+// ✅ Preflight support
+app.options("*", cors());
+
+// Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Your existing routes stay exactly the same
-app.get("/api/fetch", (req, res) => {
-  // existing fetch logic
-  res.status(200).json({ message: "Fetch endpoint placeholder" });
+// Optional: health check route
+app.get("/", (req, res) => {
+  res.send("Backend is working!");
 });
 
 // Serve static files
