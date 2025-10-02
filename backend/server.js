@@ -292,7 +292,7 @@ class FacebookParser {
       console.log('mbasic extraction failed:', e.message);
     }
     
-    // PRIORITY 2: Extract video URLs from script tags
+    // PRIORITY 2: Extract video URLs from script tags with enhanced patterns
     const videoUrls = this.extractVideoUrls($, html);
     if (videoUrls.length > 0) {
       result.content.videos = this.categorizeVideoQualities(videoUrls);
@@ -317,6 +317,16 @@ class FacebookParser {
     if (realUrls.length > 0) {
       result.content.videos = this.categorizeVideoQualities(realUrls);
       console.log(`Found ${realUrls.length} real video URLs`);
+      this.extractMetadata($, result);
+      return;
+    }
+    
+    // PRIORITY 5: Try to extract from data attributes and other sources
+    console.log('No video URLs found, trying data attributes extraction...');
+    const dataUrls = this.extractFromDataAttributes(html);
+    if (dataUrls.length > 0) {
+      result.content.videos = this.categorizeVideoQualities(dataUrls);
+      console.log(`Found ${dataUrls.length} data attribute video URLs`);
       this.extractMetadata($, result);
       return;
     }
@@ -351,22 +361,30 @@ class FacebookParser {
             /"browser_native_hd_url":"([^"]+)"/g,
             /"browser_native_sd_url":"([^"]+)"/g,
             /"dash_manifest":"([^"]+)"/g,
-            /"progressive_url":"([^"]+)"/g
+            /"progressive_url":"([^"]+)"/g,
+            // Additional patterns for better extraction
+            /"playable_url_quality_hd":"([^"]+)"/g,
+            /"preferred_video_url":"([^"]+)"/g,
+            /"video_redirect_url":"([^"]+)"/g
           ];
           
           for (const pattern of patterns) {
-            const matches = script.match(pattern);
-            if (matches) {
-              matches.forEach(match => {
-                const urlMatch = match.match(pattern);
-                if (urlMatch && urlMatch[1]) {
-                  let cleanUrl = urlMatch[1].replace(/\\/g, '');
-                  if (cleanUrl.startsWith('http') && (cleanUrl.includes('.mp4') || cleanUrl.includes('video'))) {
+            let match;
+            while ((match = pattern.exec(script)) !== null) {
+              try {
+                let cleanUrl = match[1].replace(/\\/g, '');
+                // Decode URL-encoded characters
+                cleanUrl = decodeURIComponent(cleanUrl);
+                if (cleanUrl.startsWith('http') && (cleanUrl.includes('.mp4') || cleanUrl.includes('video'))) {
+                  // Validate URL format
+                  if (cleanUrl.length > 10) { // Basic validation
                     videoUrls.push(cleanUrl);
                     console.log('Real video URL found:', cleanUrl);
                   }
                 }
-              });
+              } catch (decodeError) {
+                console.log('Error decoding URL:', decodeError.message);
+              }
             }
           }
         }
@@ -419,9 +437,93 @@ class FacebookParser {
         });
       }
       
+      // Method 5: Enhanced regex search for video URLs in the entire HTML
+      const videoUrlPatterns = [
+        /https?:\/\/[^"'\s]+\.mp4[^"'\s]*/gi,
+        /https?:\/\/[^"'\s]+\/video_redirect\/[^"'\s]*/gi,
+        /https?:\/\/[^"'\s]+fbcdn[^"'\s]+\.mp4[^"'\s]*/gi
+      ];
+      
+      videoUrlPatterns.forEach(pattern => {
+        const matches = html.match(pattern);
+        if (matches) {
+          matches.forEach(url => {
+            try {
+              const cleanUrl = decodeURIComponent(url.replace(/\\/g, ''));
+              if (cleanUrl.startsWith('http') && cleanUrl.includes('.mp4') && cleanUrl.length > 20) {
+                videoUrls.push(cleanUrl);
+                console.log('Raw HTML video URL found:', cleanUrl);
+              }
+            } catch (decodeError) {
+              console.log('Error decoding raw HTML URL:', decodeError.message);
+            }
+          });
+        }
+      });
+      
     } catch (error) {
       console.error('Error extracting real video URLs:', error);
     }
+    
+    // Remove duplicates and invalid URLs
+    const uniqueUrls = [...new Set(videoUrls)];
+    const validUrls = uniqueUrls.filter(url => 
+      url && url.startsWith('http') && url.length > 20
+    );
+    
+    console.log(`Found ${validUrls.length} valid video URLs`);
+    return validUrls;
+  }
+
+  extractFromDataAttributes(html) {
+    const videoUrls = [];
+    console.log('Extracting video URLs from data attributes...');
+    
+    // Look for video URLs in data attributes
+    const dataPatterns = [
+      /data-video-src="([^"]+)"/g,
+      /data-video-url="([^"]+)"/g,
+      /data-src="([^"]*\.mp4[^"]*)"/g,
+      /data-url="([^"]*\.mp4[^"]*)"/g
+    ];
+    
+    dataPatterns.forEach(pattern => {
+      let match;
+      while ((match = pattern.exec(html)) !== null) {
+        try {
+          const url = match[1].replace(/\\(.)/g, '$1'); // Unescape
+          if (url.startsWith('http') && url.includes('.mp4')) {
+            videoUrls.push(url);
+            console.log('Data attribute video URL found:', url);
+          }
+        } catch (e) {
+          console.log('Error processing data attribute URL:', e.message);
+        }
+      }
+    });
+    
+    // Also look for URLs in JSON-like structures
+    const jsonPatterns = [
+      /"video_url"\s*:\s*"([^"]+)"/g,
+      /"playable_url"\s*:\s*"([^"]+)"/g,
+      /"hd_src"\s*:\s*"([^"]+)"/g,
+      /"sd_src"\s*:\s*"([^"]+)"/g
+    ];
+    
+    jsonPatterns.forEach(pattern => {
+      let match;
+      while ((match = pattern.exec(html)) !== null) {
+        try {
+          const url = match[1].replace(/\\(.)/g, '$1'); // Unescape
+          if (url.startsWith('http') && (url.includes('.mp4') || url.includes('video'))) {
+            videoUrls.push(url);
+            console.log('JSON pattern video URL found:', url);
+          }
+        } catch (e) {
+          console.log('Error processing JSON pattern URL:', e.message);
+        }
+      }
+    });
     
     return [...new Set(videoUrls)]; // Remove duplicates
   }
@@ -471,6 +573,17 @@ class FacebookParser {
       result.content.videos = this.categorizeVideoQualities(realUrls);
       result.content.reels = realUrls;
       console.log(`Found ${realUrls.length} real reel URLs`);
+      this.extractMetadata($, result);
+      return;
+    }
+    
+    // PRIORITY 5: Try to extract from data attributes
+    console.log('No video URLs found for reel, trying data attributes extraction...');
+    const dataUrls = this.extractFromDataAttributes(html);
+    if (dataUrls.length > 0) {
+      result.content.videos = this.categorizeVideoQualities(dataUrls);
+      result.content.reels = dataUrls;
+      console.log(`Found ${dataUrls.length} data attribute reel URLs`);
       this.extractMetadata($, result);
       return;
     }
@@ -864,14 +977,104 @@ app.get('/api/download', async (req, res) => {
     console.log('Filename:', filename);
     
     // Check if this is a Facebook CDN URL that might be restricted
-    const isFacebookCDN = url.includes('fbcdn.net') || url.includes('video.fbkk');
+    const isFacebookCDN = url.includes('fbcdn.net') || url.includes('video.fbkk') || url.includes('facebook.com');
     
     if (isFacebookCDN) {
-      console.log('Detected Facebook CDN URL, trying alternative approach...');
+      console.log('Detected Facebook URL, using enhanced download approach...');
       
-      // For Facebook CDN URLs, we'll try multiple approaches
-      // Approach 0: try mbasic video_redirect to obtain a fresh downloadable URL
+      // Enhanced approach for Facebook URLs
+      // Try multiple user agents and headers combinations
+      const userAgents = [
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+        'Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Mobile/15E148 Safari/604.1',
+        'Mozilla/5.0 (Linux; Android 14; SM-S918U) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.112 Mobile Safari/537.36'
+      ];
+      
+      const headersList = [
+        // Desktop headers
+        {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.9',
+          'Accept-Encoding': 'gzip, deflate, br',
+          'Referer': 'https://www.facebook.com/',
+          'DNT': '1',
+          'Connection': 'keep-alive',
+          'Upgrade-Insecure-Requests': '1'
+        },
+        // Mobile headers
+        {
+          'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Mobile/15E148 Safari/604.1',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.9',
+          'Referer': 'https://www.facebook.com/',
+          'DNT': '1',
+          'Connection': 'keep-alive',
+          'Upgrade-Insecure-Requests': '1'
+        },
+        // Minimal headers
+        {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+          'Accept': '*/*'
+        }
+      ];
+      
+      // Try each combination
+      for (let i = 0; i < userAgents.length; i++) {
+        try {
+          console.log(`Trying download approach ${i + 1}...`);
+          
+          const response = await axios({
+            method: 'GET',
+            url: url,
+            responseType: 'stream',
+            headers: headersList[i % headersList.length],
+            timeout: 45000, // Increase timeout
+            maxRedirects: 10, // Increase redirects
+            validateStatus: function (status) {
+              // Accept more status codes
+              return (status >= 200 && status < 400) || status === 206 || status === 403 || status === 416;
+            }
+          });
+
+          console.log(`Download approach ${i + 1} successful, status:`, response.status);
+          
+          // Set appropriate headers for download
+          const contentType = response.headers['content-type'] || 'video/mp4';
+          const contentLength = response.headers['content-length'];
+          const downloadFilename = filename || 'facebook-video.mp4';
+
+          res.setHeader('Content-Type', contentType);
+          res.setHeader('Content-Disposition', `attachment; filename="${downloadFilename}"`);
+          res.setHeader('Cache-Control', 'no-cache');
+          
+          if (contentLength) {
+            res.setHeader('Content-Length', contentLength);
+          }
+          
+          // Handle range requests for video streaming
+          if (response.status === 206 && response.headers['content-range']) {
+            res.status(206);
+            res.setHeader('Accept-Ranges', 'bytes');
+            res.setHeader('Content-Range', response.headers['content-range']);
+          }
+
+          // Pipe the response to the client
+          response.data.pipe(res);
+          return;
+          
+        } catch (error) {
+          console.log(`Download approach ${i + 1} failed:`, error.response?.status, error.message);
+          // Continue to next approach
+        }
+      }
+      
+      // If all approaches failed, try mbasic redirect as last resort
+      console.log('All download approaches failed, trying mbasic redirect...');
+      
       try {
+        // Try to get a fresh URL via mbasic
         const freshUrl = await parser.fetchMbasicVideoUrl(url);
         if (freshUrl) {
           console.log('Using fresh mp4 URL from mbasic:', freshUrl);
@@ -879,7 +1082,11 @@ app.get('/api/download', async (req, res) => {
             method: 'GET',
             url: freshUrl,
             responseType: 'stream',
-            headers: { 'User-Agent': parser.userAgent, 'Accept': '*/*', 'Referer': 'https://mbasic.facebook.com/' },
+            headers: { 
+              'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Mobile/15E148 Safari/604.1',
+              'Accept': '*/*',
+              'Referer': 'https://mbasic.facebook.com/'
+            },
             timeout: 30000,
             maxRedirects: 5,
             validateStatus: s => (s >= 200 && s < 400) || s === 206
@@ -895,228 +1102,18 @@ app.get('/api/download', async (req, res) => {
           r.data.pipe(res);
           return;
         }
-      } catch (e) {
-        console.log('mbasic prefetch failed, continuing with header variants');
-      }
-      
-      // Additional user agents to try
-      const additionalUserAgents = [
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-        'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-        'Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Mobile/15E148 Safari/604.1',
-        'Mozilla/5.0 (iPad; CPU OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Mobile/15E148 Safari/604.1',
-        'Mozilla/5.0 (Linux; Android 14; SM-S918U) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.112 Mobile Safari/537.36',
-        'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.112 Mobile Safari/537.36'
-      ];
-      
-      const approaches = [
-        // Approach 1: Try with mobile user agent
-        {
-          'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_7_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1.2 Mobile/15E148 Safari/604.1',
-          'Accept': '*/*',
-          'Accept-Language': 'en-US,en;q=0.9',
-          'Referer': 'https://www.facebook.com/',
-          'Origin': 'https://www.facebook.com'
-        },
-        // Approach 2: Try with desktop user agent
-        {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          'Accept': '*/*',
-          'Accept-Language': 'en-US,en;q=0.9',
-          'Referer': 'https://www.facebook.com/',
-          'Origin': 'https://www.facebook.com'
-        },
-        // Approach 3: Try with minimal headers
-        {
-          'User-Agent': 'Mozilla/5.0 (compatible; FacebookBot/1.0)',
-          'Accept': '*/*'
-        }
-      ];
-      
-      // Add additional user agents as separate approaches
-      additionalUserAgents.forEach((userAgent, index) => {
-        approaches.push({
-          'User-Agent': userAgent,
-          'Accept': '*/*',
-          'Accept-Language': 'en-US,en;q=0.9',
-          'Referer': 'https://www.facebook.com/',
-          'Origin': 'https://www.facebook.com'
-        });
-      });
-      
-      let lastError = null;
-      
-      for (let i = 0; i < approaches.length; i++) {
-        try {
-          console.log(`Trying approach ${i + 1} with User-Agent: ${approaches[i]['User-Agent']}...`);
-          
-          const response = await axios({
-            method: 'GET',
-            url: url,
-            responseType: 'stream',
-            headers: approaches[i],
-            timeout: 30000,
-            maxRedirects: 5,
-            validateStatus: function (status) {
-              return (status >= 200 && status < 400) || status === 206;
-            }
-          });
-
-          console.log(`Approach ${i + 1} successful, status:`, response.status);
-          
-          // Set appropriate headers for download
-          const contentType = response.headers['content-type'] || 'video/mp4';
-          const downloadFilename = filename || 'facebook-media';
-
-          res.setHeader('Content-Type', contentType);
-          res.setHeader('Content-Disposition', `attachment; filename="${downloadFilename}"`);
-          res.setHeader('Cache-Control', 'no-cache');
-          
-          if (response.headers['content-length']) {
-            res.setHeader('Content-Length', response.headers['content-length']);
-          }
-          if (response.status === 206 && response.headers['content-range']) {
-            res.status(206);
-            res.setHeader('Accept-Ranges', 'bytes');
-            res.setHeader('Content-Range', response.headers['content-range']);
-          }
-
-          // Pipe the response to the client
-          response.data.pipe(res);
-          return;
-          
-        } catch (error) {
-          console.log(`Approach ${i + 1} failed:`, error.response?.status, error.message);
-          lastError = error;
-          continue;
-        }
-      }
-      
-      // If all approaches failed, try one more time with mbasic redirect
-      console.log('All download approaches failed for Facebook CDN URL, trying mbasic redirect...');
-      
-      try {
-        // Extract video ID from URL for mbasic fallback
-        const videoIdMatch = url.match(/(\w+)_hd\.mp4$/) || url.match(/(\w+)_n\.mp4$/);
-        if (videoIdMatch) {
-          const videoId = videoIdMatch[1];
-          const mbasicUrl = `https://mbasic.facebook.com/videos/${videoId}`;
-          console.log('Trying mbasic fallback:', mbasicUrl);
-          
-          const mbasicResp = await axios.get(mbasicUrl, { 
-            headers: parser.headers, 
-            timeout: 15000 
-          });
-          const $ = cheerio.load(mbasicResp.data);
-          
-          // Look for video redirect link
-          let redirect = $('a[href*="/video_redirect/"]').attr('href');
-          if (redirect && redirect.startsWith('/')) {
-            redirect = 'https://mbasic.facebook.com' + redirect;
-          }
-          
-          if (redirect) {
-            console.log('Found mbasic redirect, following...');
-            const finalResp = await axios.get(redirect, {
-              headers: parser.headers,
-              timeout: 15000,
-              maxRedirects: 5,
-              validateStatus: s => s >= 200 && s < 400
-            });
-            
-            // Extract final URL
-            let finalUrl = finalResp.request?.res?.responseUrl;
-            if (!finalUrl) {
-              const match = String(finalResp.data || '').match(/https?:[^"']+\.mp4[^"']*/i);
-              finalUrl = match ? match[0] : null;
-            }
-            
-            if (finalUrl && /\.mp4(\?|$)/i.test(finalUrl)) {
-              console.log('mbasic redirect successful, streaming:', finalUrl);
-              const streamResp = await axios({
-                method: 'GET',
-                url: finalUrl,
-                responseType: 'stream',
-                headers: { 'User-Agent': parser.userAgent, 'Accept': '*/*' },
-                timeout: 30000,
-                maxRedirects: 5,
-                validateStatus: s => (s >= 200 && s < 400) || s === 206
-              });
-              
-              res.setHeader('Content-Type', streamResp.headers['content-type'] || 'video/mp4');
-              res.setHeader('Content-Disposition', `attachment; filename="${filename || 'facebook-video.mp4'}"`);
-              if (streamResp.headers['content-length']) res.setHeader('Content-Length', streamResp.headers['content-length']);
-              if (streamResp.status === 206 && streamResp.headers['content-range']) {
-                res.status(206);
-                res.setHeader('Accept-Ranges', 'bytes');
-                res.setHeader('Content-Range', streamResp.headers['content-range']);
-              }
-              streamResp.data.pipe(res);
-              return;
-            }
-          }
-        }
       } catch (mbasicError) {
-        console.log('mbasic fallback failed:', mbasicError.message);
+        console.log('mbasic redirect failed:', mbasicError.message);
       }
       
-      // Final fallback - try to stream directly but with better error handling
-      console.log('All approaches failed, trying direct stream with error handling...');
-      try {
-        const response = await axios({
-          method: 'GET',
-          url: url,
-          responseType: 'stream',
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-            'Accept': '*/*',
-            'Accept-Language': 'en-US,en;q=0.9',
-            'Referer': 'https://www.facebook.com/',
-            'Origin': 'https://www.facebook.com'
-          },
-          timeout: 30000,
-          maxRedirects: 5,
-          validateStatus: function (status) {
-            // Accept even 403 status to try to stream the response
-            return (status >= 200 && status < 400) || status === 403 || status === 206;
-          }
-        });
-
-        console.log('Direct stream attempt status:', response.status);
-        
-        // Set appropriate headers for download
-        const contentType = response.headers['content-type'] || 'video/mp4';
-        const downloadFilename = filename || 'facebook-media';
-
-        res.setHeader('Content-Type', contentType);
-        res.setHeader('Content-Disposition', `attachment; filename="${downloadFilename}"`);
-        res.setHeader('Cache-Control', 'no-cache');
-        
-        if (response.headers['content-length']) {
-          res.setHeader('Content-Length', response.headers['content-length']);
-        }
-        if (response.status === 206 && response.headers['content-range']) {
-          res.status(206);
-          res.setHeader('Accept-Ranges', 'bytes');
-          res.setHeader('Content-Range', response.headers['content-range']);
-        }
-
-        // Pipe the response to the client
-        response.data.pipe(res);
-        return;
-      } catch (streamError) {
-        console.log('Direct stream failed:', streamError.message);
-      }
-      
-      // Final fallback - return 403 with no popup
+      // Final fallback - return error
       return res.status(403).json({
         success: false,
-        error: 'Video not accessible'
+        error: 'Video not accessible - Facebook may be blocking automated downloads. Please try again later or use a different video.'
       });
     }
     
-    // For non-Facebook CDN URLs, use standard approach
+    // For non-Facebook URLs, use standard approach
     const downloadHeaders = {
       'User-Agent': parser.userAgent,
       'Accept': '*/*',

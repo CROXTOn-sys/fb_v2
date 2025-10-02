@@ -670,12 +670,18 @@ export default function FacebookDownloader() {
         // Try HD first, then SD
         const videoUrl = content.videos.hd || content.videos.sd
         const quality = content.videos.hd ? '720p' : '360p'
-        const filename = `facebook-video-${quality}.mp4`
-        
+        const filename = `facebook-${content.contentType}-${quality}.mp4`
+      
         console.log('Attempting to download video:', videoUrl)
-        await triggerDownload(videoUrl, filename)
+        // For video/reel content, use the backend API directly to ensure proper handling
+        if (content.contentType === 'video' || content.contentType === 'reel') {
+          await triggerBackendDownload(videoUrl, filename)
+        } else {
+          await triggerDownload(videoUrl, filename)
+        }
       } else if (Array.isArray(content.reels) && content.reels.length > 0) {
-        await triggerDownload(content.reels[0], 'facebook-reel.mp4')
+        // Use backend download for reels
+        await triggerBackendDownload(content.reels[0], 'facebook-reel.mp4')
       } else if (Array.isArray(content.stories) && content.stories.length > 0) {
         const storyUrl = content.stories[0]
         const isVideo = /\.(mp4|mov|avi|wmv|flv|webm)/i.test(storyUrl)
@@ -690,6 +696,29 @@ export default function FacebookDownloader() {
     } catch (error) {
       console.error('Direct download failed:', error)
       // Silent fail - no popups
+    }
+  }
+
+  // New function to handle backend-based downloads for videos and reels
+  async function triggerBackendDownload(mediaUrl: string, suggestedName: string) {
+    try {
+      // For videos and reels, use the backend API directly to ensure proper streaming
+      const backendUrl = `${API_BASE}/api/download?url=${encodeURIComponent(mediaUrl)}&filename=${encodeURIComponent(suggestedName)}`;
+    
+      // Create a temporary anchor element for download
+      const anchor = document.createElement('a');
+      anchor.href = backendUrl;
+      anchor.download = suggestedName;
+      anchor.style.display = 'none';
+    
+      // Add to DOM, click, and remove
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
+    
+      console.log('Backend download initiated successfully for:', mediaUrl);
+    } catch (error) {
+      console.error('Backend download failed:', error);
     }
   }
 
